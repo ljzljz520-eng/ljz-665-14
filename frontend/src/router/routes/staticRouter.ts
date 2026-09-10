@@ -20,4 +20,26 @@ export const AI_ROUTE: AppRouteRecordRaw = {
   ],
 };
 
-export const staticRoutesList = [AI_ROUTE];
+
+export const EQUIPMENT_ARCHIVE_ROUTE: AppRouteRecordRaw = {
+  path: '',
+  name: 'equipment-parent',
+  component: LAYOUT,
+  meta: {
+    title: '设备管理',
+  },
+  children: [
+    {
+      path: '/equipment/archive',
+      name: 'EquipmentArchive',
+      component: () => import('/@/views/equipment/archive/index.vue'),
+      meta: {
+        title: '设备档案',
+        icon: 'ant-design:hdd-outlined',
+      },
+    },
+  ],
+};
+
+export const staticRoutesList = [AI_ROUTE, EQUIPMENT_ARCHIVE_ROUTE];
+
