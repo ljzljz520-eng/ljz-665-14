@@ -70,7 +70,7 @@
             <a-button type="primary" @click="handleAdd">
               <template #icon><Icon icon="ant-design:plus-outlined" /></template>新增
             </a-button>
-            <a-button @click="handleExport">
+            <a-button :loading="exportLoading" @click="handleExport">
               <template #icon><Icon icon="ant-design:export-outlined" /></template>导出
             </a-button>
             <a-button @click="loadData">
@@ -216,9 +216,11 @@
     Spin as ASpin,
     Empty as AEmpty,
   } from 'ant-design-vue';
-  import { getEquipmentPage, getCategoryOptions, deleteEquipment, type EquipmentRecord } from '/@/api/equipment/archive';
-  import { columns as baseColumns, statusOptions, getStatusColor, getStatusLabel } from './archive.data';
+  import { getEquipmentPage, getEquipmentAll, getCategoryOptions, deleteEquipment, type EquipmentRecord } from '/@/api/equipment/archive';
+  import { columns as baseColumns, exportColumns, statusOptions, getStatusColor, getStatusLabel } from './archive.data';
   import { useMessage } from '/@/hooks/web/useMessage';
+  import { downloadByData } from '/@/utils/file/download';
+  import { formatToDateTime } from '/@/utils/dateUtil';
   import DetailDrawer from './components/DetailDrawer.vue';
   import EquipmentModal from './components/EquipmentModal.vue';
 
@@ -355,9 +357,36 @@
     loadData();
   }
 
-  /* ---------------- 导出（占位提示） ---------------- */
-  function handleExport() {
-    createMessage.info('导出接口待后端提供，当前为演示环境');
+  /* ---------------- 导出（前端生成 CSV，后端就绪后可换为接口导出） ---------------- */
+  const exportLoading = ref(false);
+
+  /** CSV 字段转义：含逗号/引号/换行时用双引号包裹 */
+  function csvEscape(value: unknown): string {
+    const text = value == null ? '' : String(value);
+    return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+  }
+
+  async function handleExport() {
+    exportLoading.value = true;
+    try {
+      // 勾选行优先导出选中项，否则按当前查询条件导出全部
+      const all = await getEquipmentAll({ ...appliedQuery.value });
+      const rows = selectedRowKeys.value.length ? all.filter((r) => selectedRowKeys.value.includes(r.id)) : all;
+      if (!rows.length) {
+        createMessage.warning('没有可导出的数据');
+        return;
+      }
+      const header = exportColumns.map((c) => c.title).join(',');
+      const lines = rows.map((r) =>
+        exportColumns.map((c) => csvEscape(c.dataIndex === 'status' ? getStatusLabel(r.status) : r[c.dataIndex])).join(',')
+      );
+      // 加 BOM 保证 Excel 打开中文不乱码
+      const csv = '\uFEFF' + [header, ...lines].join('\r\n');
+      downloadByData(csv, `设备档案_${formatToDateTime(undefined, 'YYYYMMDDHHmmss')}.csv`, 'text/csv;charset=utf-8;');
+      createMessage.success(`已导出 ${rows.length} 条设备档案`);
+    } finally {
+      exportLoading.value = false;
+    }
   }
 
   /* ---------------- 字典 ---------------- */

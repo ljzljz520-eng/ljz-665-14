@@ -3,7 +3,7 @@ import type { BasicResult } from '/@/api/model/baseModel';
 /**
  * 设备档案接口层
  * 当前为前端内置模拟数据，便于在后端接口就绪前联调页面。
- * 后端就绪后只需将 getEquipmentPage / saveEquipment / deleteEquipment
+ * 后端就绪后只需将 getEquipmentPage / getEquipmentAll / saveEquipment / deleteEquipment
  * 内部替换为 defHttp 请求即可（入参/出参结构保持不变）。
  */
 
@@ -86,18 +86,31 @@ function delay(ms = 220) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/** 分页查询设备档案 */
-export async function getEquipmentPage(params: EquipmentQuery): Promise<BasicResult<EquipmentRecord>> {
-  await delay();
-  const { code, name, category, status, pageNo = 1, pageSize = 10 } = params;
+/** 按条件筛选设备档案（内部分页/导出共用） */
+function filterRows(params: EquipmentQuery): EquipmentRecord[] {
+  const { code, name, category, status } = params;
   let rows = [...mockDb];
   if (code) rows = rows.filter((r) => r.code.toLowerCase().includes(code.toLowerCase()));
   if (name) rows = rows.filter((r) => r.name.includes(name));
   if (category) rows = rows.filter((r) => r.category === category);
   if (status) rows = rows.filter((r) => r.status === status);
+  return rows;
+}
+
+/** 分页查询设备档案 */
+export async function getEquipmentPage(params: EquipmentQuery): Promise<BasicResult<EquipmentRecord>> {
+  await delay();
+  const { pageNo = 1, pageSize = 10 } = params;
+  const rows = filterRows(params);
   const total = rows.length;
   const start = (pageNo - 1) * pageSize;
   return { records: rows.slice(start, start + pageSize), total };
+}
+
+/** 查询全部符合条件的设备档案（不分页，供导出使用） */
+export async function getEquipmentAll(params: EquipmentQuery): Promise<EquipmentRecord[]> {
+  await delay();
+  return filterRows(params);
 }
 
 /** 查询设备类型字典（模拟） */

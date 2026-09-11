@@ -40,6 +40,26 @@ export const columns: BasicColumn[] = [
   { title: '投运日期', dataIndex: 'runDate', width: 110, align: 'center' },
 ];
 
+/**
+ * 导出列定义：覆盖档案全部字段，运行状态导出为中文文案
+ */
+export const exportColumns: { title: string; dataIndex: keyof EquipmentRecord }[] = [
+  { title: '设备编码', dataIndex: 'code' },
+  { title: '设备名称', dataIndex: 'name' },
+  { title: '设备类型', dataIndex: 'category' },
+  { title: '规格型号', dataIndex: 'specModel' },
+  { title: '生产厂商', dataIndex: 'manufacturer' },
+  { title: '出厂序列号', dataIndex: 'serialNo' },
+  { title: '所属部门', dataIndex: 'dept' },
+  { title: '存放位置', dataIndex: 'location' },
+  { title: '责任人', dataIndex: 'keeper' },
+  { title: '运行状态', dataIndex: 'status' },
+  { title: '购置日期', dataIndex: 'purchaseDate' },
+  { title: '投运日期', dataIndex: 'runDate' },
+  { title: '质保到期', dataIndex: 'warrantyDate' },
+  { title: '备注', dataIndex: 'remark' },
+];
+
 /** 详情抽屉中分组的字段 */
 export interface DescGroup {
   title: string;
